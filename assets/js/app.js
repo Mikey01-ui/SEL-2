@@ -175,7 +175,15 @@ function showView(key) {
     if (key !== 'more') $('#moreMenu').classList.add('hidden');
     animateIn(next);
     if (key==='notifs') renderNotifications();
-    if (key==='geo') { store.set('sel:geoInside', false); updateGeoUI(); renderGeoTempNotifs(); }
+    if (key==='geo') {
+      // Reset connection state so the user must Check location first each visit
+      store.set('sel:geoInside', false);
+      store.set('sel:geoChecked', false);
+      store.set('sel:geoNear', false);
+      store.set('sel:geoDistance', null);
+      updateGeoUI();
+      renderGeoTempNotifs();
+    }
   };
 
   if (current && current !== next) animateOut(current, activate); else activate();
@@ -453,11 +461,26 @@ function updateGeoUI() {
   const near = !!store.get('sel:geoNear', false);
   const online = !!store.get('sel:online', false) && (navigator.onLine !== false);
   const dist = store.get('sel:geoDistance', null);
+  const checkedOnce = !!store.get('sel:geoChecked', false);
   const tgl = $('#geoToggle');
-  if (tgl) tgl.checked = inside;
-  // Keep toggle enabled; we'll handle connecting when needed
+  if (tgl) {
+    tgl.checked = inside;
+    // Disable the connect toggle until user has checked location and we're online
+    const canToggle = online && checkedOnce;
+    tgl.disabled = !canToggle;
+    // adjust pointer cursor on the label/track
+    const label = tgl.closest('label');
+    if (label) {
+      label.classList.toggle('cursor-pointer', canToggle);
+      label.classList.toggle('cursor-not-allowed', !canToggle);
+      const track = label.querySelector('.w-8.h-4');
+      if (track) track.style.opacity = canToggle ? '1' : '0.5';
+    }
+  }
+  // Require location check first, then allow manual connect
   let statusTxt = 'Outside zone';
   if (!online) statusTxt = 'Offline — go online';
+  else if (!checkedOnce) statusTxt = 'Tap “Check location” to continue';
   else if (!near) statusTxt = 'Outside zone' + (dist!=null?` • ${formatMeters(dist)} away`:'');
   else if (!inside) statusTxt = `Ready — ${dist!=null?`${formatMeters(dist)} from Dome — `:''}toggle to connect`;
   else statusTxt = 'Inside zone' + (dist!=null?` • ${formatMeters(dist)} from Dome`: '');
@@ -469,6 +492,7 @@ function updateGeoUI() {
   if (alert) {
     let show = true, msg = '';
     if (!online) { msg = 'You must be online to connect and use geo features.'; }
+    else if (!store.get('sel:geoChecked', false)) { msg = 'First, tap “Check location” to get your distance. Then toggle Connect.'; }
     else if (!near) { msg = `You must be within ${DOME.radius} m of the Dome to use geo features.`; }
     else if (!inside) { msg = 'Toggle Connect to enter the campus zone.'; }
     else { show = false; }
@@ -939,6 +963,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const checked = e.target.checked;
     const near = !!store.get('sel:geoNear', false);
     const online = !!store.get('sel:online', false) && (navigator.onLine !== false);
+    const hasChecked = !!store.get('sel:geoChecked', false);
+    // Guard: require Check Location first
+    if (checked && !hasChecked) {
+      e.target.checked = false;
+      updateGeoUI();
+      return;
+    }
     if (checked) {
       if (!online) { e.target.checked = false; updateGeoUI(); return; }
       if (!near) { e.target.checked = false; updateGeoUI(); return; }
@@ -1073,6 +1104,8 @@ function checkLocation(){
     store.set('sel:geoNear', true);
     // Do not auto-enter zone; require user to toggle Connect
     store.set('sel:geoInside', false);
+    // Mark that the user has performed a location check this session
+    store.set('sel:geoChecked', true);
     updateGeoUI();
   };
 
