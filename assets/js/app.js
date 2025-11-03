@@ -293,6 +293,7 @@ function toggleOnline() {
   store.set('sel:online', next);
   setSimulatedPresence(next);
   updateOnlineButton();
+  pulseOnlinePill();
 }
 
 // Presence rendering
@@ -484,8 +485,23 @@ function updateGeoUI() {
   else if (!near) statusTxt = 'Outside zone' + (dist!=null?` • ${formatMeters(dist)} away`:'');
   else if (!inside) statusTxt = `Ready — ${dist!=null?`${formatMeters(dist)} from Dome — `:''}toggle to connect`;
   else statusTxt = 'Inside zone' + (dist!=null?` • ${formatMeters(dist)} from Dome`: '');
-  $('#geoStatus').textContent = statusTxt;
-  $('#geoStatus').className = 'font-semibold ' + (inside ? 'text-success' : 'text-danger');
+  // Update status text and make it actionable when offline
+  const statusEl = $('#geoStatus');
+  if (statusEl) {
+    statusEl.textContent = statusTxt;
+    statusEl.className = 'font-semibold ' + (inside ? 'text-success' : 'text-danger');
+    // When offline, allow clicking the status to toggle online for convenience
+    statusEl.onclick = null;
+    statusEl.title = '';
+    statusEl.classList.remove('underline');
+    statusEl.classList.remove('cursor-pointer');
+    if (!online) {
+      statusEl.title = 'Click to go online';
+      statusEl.classList.add('underline');
+      statusEl.classList.add('cursor-pointer');
+      statusEl.onclick = ()=>{ if (!session.user) { showView('login'); return; } toggleOnline(); updateGeoUI(); };
+    }
+  }
   $('#geoDot').className = 'w-4 h-4 rounded-full transition ' + (inside ? 'bg-success translate-x-4' : 'bg-danger translate-x-0');
   $('#geoPostBtn').disabled = !inside;
   const alert = $('#geoAlert');
@@ -1074,6 +1090,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // subtle presence churn for realism
   setInterval(churnSimPresence, 15000);
+
+  // Initialize polish animations and micro-interactions
+  initUIFX();
 });
 
 // Geo connecting and location simulation
@@ -1301,5 +1320,61 @@ function simulateChatBurst(participants=10, count=24){
   store.set('sel:chat', msgs.slice(-200));
   window.dispatchEvent(new StorageEvent('storage', { key:'sel:chat' }));
   renderChat();
+}
+
+// --- Delight & micro-interactions (performance-friendly) ---
+function initUIFX(){
+  // Add lift/pressable classes to common interactive elements
+  try {
+    $$('.glass, .rounded-3xl, .rounded-2xl').forEach(el=> el.classList.add('lift'));
+    $$('button').forEach(b=>{ b.classList.add('pressable','glow-focus','ripple'); attachRipple(b); });
+  } catch {}
+
+  // Scroll reveal using IntersectionObserver + GSAP if available
+  const targets = Array.from(document.querySelectorAll('#mainArea .glass, #mainArea .rounded-3xl, #mainArea .rounded-2xl'));
+  const observer = ('IntersectionObserver' in window) ? new IntersectionObserver((entries, obs)=>{
+    entries.forEach(ent=>{
+      if (ent.isIntersecting){
+        ent.target.classList.remove('reveal-init');
+        if (window.gsap) gsap.fromTo(ent.target, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.22, ease: 'power2.out' });
+        else ent.target.classList.add('reveal-done');
+        obs.unobserve(ent.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 }) : null;
+  targets.forEach(t=>{ t.classList.add('reveal-init'); if (observer) observer.observe(t); });
+
+  // Parallax effect for background in response to pointer
+  const bg = document.getElementById('bgAnimated');
+  if (bg && window.gsap){
+    const qx = gsap.quickTo(bg, 'x', { duration: 0.3, ease: 'power2.out' });
+    const qy = gsap.quickTo(bg, 'y', { duration: 0.3, ease: 'power2.out' });
+    window.addEventListener('mousemove', (e)=>{
+      const { innerWidth: w, innerHeight: h } = window;
+      const dx = (e.clientX / w - 0.5) * 14; // max 14px shift
+      const dy = (e.clientY / h - 0.5) * 14;
+      qx(dx); qy(dy);
+    });
+  }
+}
+
+function attachRipple(btn){
+  btn.addEventListener('click', (e)=>{
+    try {
+      const rect = btn.getBoundingClientRect();
+      const circle = document.createElement('span');
+      circle.className = 'ripple-circle';
+      circle.style.left = (e.clientX - rect.left) + 'px';
+      circle.style.top = (e.clientY - rect.top) + 'px';
+      btn.appendChild(circle);
+      setTimeout(()=> circle.remove(), 650);
+    } catch {}
+  });
+}
+
+function pulseOnlinePill(){
+  const el = document.getElementById('globalOnline');
+  if (!el || !window.gsap) return;
+  gsap.fromTo(el, { scale: 0.92 }, { scale: 1, duration: 0.22, ease: 'back.out(2)' });
 }
 
