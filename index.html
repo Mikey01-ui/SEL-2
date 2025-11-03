@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>S‑E‑L — Student Engagement & Learning</title>
+  <meta name="description" content="Mobile-first S‑E‑L platform demo: chat, geo‑wall, academic hub, wellness pulse with triage, networking, board, jobs/events, study groups, marketplace, housing, and gaming." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
+              500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+            },
+            success: '#22c55e', danger: '#ef4444', warning: '#f59e0b'
+          },
+          boxShadow: {
+            glass: '0 10px 30px rgba(0,0,0,0.15)'
+          },
+          backdropBlur: {
+            xs: '2px'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="font-sans antialiased">
+  <!-- Animated Background Layer -->
+  <div id="bgAnimated" class="bg-animated"></div>
+  <div id="app" class="relative z-10 mx-auto max-w-md min-h-screen flex flex-col">
+
+    <!-- App Header -->
+    <header class="p-4 pt-6">
+      <div class="glass rounded-2xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img id="appUserAvatar" alt="avatar" class="w-9 h-9 rounded-full ring-2 ring-white/20" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop"/>
+          <div>
+            <div class="text-sm text-white/60">Welcome</div>
+            <div id="appUserName" class="text-base font-semibold">Guest</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 flex-wrap justify-end">
+          <span class="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-yellow-500/15 text-yellow-300 border border-yellow-400/30">Demo</span>
+          <span id="globalOnline" class="px-2 py-0.5 rounded-full text-[10px] bg-red-500/15 text-red-300 border border-red-400/30">Offline</span>
+          <button id="btnNotifs" class="relative px-2 py-1 rounded-full bg-white/10 hover:bg-white/20 transition">
+            <span>🔔</span>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white"></span>
+          </button>
+          <button id="btnSignOut" class="text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/20 transition">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Global Online Avatars (visible under header on every page) -->
+    <section class="px-4 -mt-2 mb-2">
+      <div id="globalAvatars" class="flex -space-x-2"></div>
+    </section>
+
+    <!-- CONTENT -->
+    <main class="flex-1 px-4 pb-24" id="mainArea">
+
+      <!-- LOGIN VIEW -->
+      <section id="viewLogin" class="tab active">
+        <div class="glass rounded-3xl p-6">
+          <h1 class="text-xl font-bold mb-2">S‑E‑L Platform</h1>
+          <p class="text-white/70 text-sm">Sign in or continue as guest to explore 11 student‑focused tools.</p>
+          <p class="text-xs text-white/60 mb-6">Demo only — all features are simulated locally; no real accounts or data are used.</p>
+          <div class="space-y-3">
+            <div>
+              <label for="email" class="text-xs text-white/60">Email (optional)</label>
+              <input id="email" type="email" placeholder="you@example.edu" class="w-full mt-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" />
+            </div>
+            <div class="flex gap-2">
+              <button id="btnEmailLogin" class="flex-1 px-3 py-2 rounded-xl bg-brand-500">Sign in</button>
+              <button id="btnAnonLogin" class="flex-1 px-3 py-2 rounded-xl bg-white/10">Anonymous Test</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOME VIEW -->
+      <section id="viewHome" class="tab hidden">
+        <div class="flex justify-end mb-3">
+          <button id="btnToggleOnline" class="px-3 py-2 rounded-xl bg-white/10">Go Online</button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button class="glass rounded-2xl p-4 text-left" data-nav="profile"><div class="font-semibold">Profile</div><div class="text-xs text-white/60">Your details</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="chat"><div class="font-semibold">Chat</div><div class="text-xs text-white/60">Campus chat</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="geo"><div class="font-semibold">Geo‑wall</div><div class="text-xs text-white/60">Inside campus</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="academic"><div class="font-semibold">Academic</div><div class="text-xs text-white/60">KB + mentor</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="core"><div class="font-semibold">CORE Pulse</div><div class="text-xs text-white/60">Wellness</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="network"><div class="font-semibold">Network</div><div class="text-xs text-white/60">Events</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="board"><div class="font-semibold">Board</div><div class="text-xs text-white/60">Posts</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="jobs"><div class="font-semibold">Jobs</div><div class="text-xs text-white/60">Campus</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="study"><div class="font-semibold">Study</div><div class="text-xs text-white/60">Groups</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="market"><div class="font-semibold">Market</div><div class="text-xs text-white/60">Buy/Sell</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="housing"><div class="font-semibold">Housing</div><div class="text-xs text-white/60">Rentals</div></button>
+          <button class="glass rounded-2xl p-4 text-left" data-nav="gaming"><div class="font-semibold">Gaming</div><div class="text-xs text-white/60">Rooms</div></button>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS VIEW -->
+      <section id="viewNotifs" class="tab hidden">
+        <div class="glass rounded-3xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-semibold">Notifications</div>
+            <div class="flex gap-2">
+              <button id="btnNotifMarkAll" class="px-2 py-1.5 rounded-lg bg-white/10">Mark all read</button>
+              <button id="btnNotifClear" class="px-2 py-1.5 rounded-lg bg-white/10">Clear</button>
+            </div>
+          </div>
+          <div id="notifList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- PROFILE VIEW -->
+      <section id="viewProfile" class="tab hidden">
+        <div class="glass rounded-3xl p-5">
+          <div class="flex items-center gap-4">
+            <img id="profAvatar" class="w-20 h-20 rounded-2xl object-cover ring-2 ring-white/20" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" alt="avatar" />
+            <div>
+              <div id="profName" class="font-semibold text-lg">Student</div>
+              <div id="profEmail" class="text-xs text-white/60">Anonymous test account</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            <div class="rounded-xl bg-white/5 border border-white/10 p-3"><div class="text-xs text-white/60">Major</div><div id="profMajor">—</div></div>
+            <div class="rounded-xl bg-white/5 border border-white/10 p-3"><div class="text-xs text-white/60">Year</div><div id="profYear">—</div></div>
+            <div class="col-span-2 rounded-xl bg-white/5 border border-white/10 p-3"><div class="text-xs text-white/60">Bio</div><div id="profBio">—</div></div>
+          </div>
+          <div id="profInterests" class="flex flex-wrap gap-2 mt-3"></div>
+        </div>
+        <div class="mt-3">
+          <div class="text-xs text-white/60">Online now: <span id="onlineCount">1</span></div>
+        </div>
+      </section>
+
+      <!-- CHAT VIEW -->
+      <section id="viewChat" class="tab hidden">
+        <div class="glass rounded-3xl p-4">
+          <div id="chatList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+          <div class="flex gap-2 mt-3">
+            <input id="chatInput" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" placeholder="Type a message" />
+            <button id="chatSend" class="px-3 py-2 rounded-xl bg-brand-500">Send</button>
+          </div>
+          <div id="typingStatus" class="text-xs text-white/60 mt-1">&nbsp;</div>
+        </div>
+      </section>
+
+      <!-- GEO VIEW -->
+      <section id="viewGeo" class="tab hidden">
+        <div class="glass rounded-3xl p-4 space-y-3">
+          <div id="geoAlert" class="hidden rounded-xl bg-red-500/10 border border-red-500/30 p-3 text-sm">Not connected to campus — posts disabled.</div>
+          <div class="flex items-center justify-between">
+            <div class="font-semibold">Campus zone</div>
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input id="geoToggle" type="checkbox" class="sr-only" />
+              <div class="w-8 h-4 rounded-full bg-white/10 border border-white/10 relative">
+                <div id="geoDot" class="w-4 h-4 rounded-full bg-danger translate-x-0 transition absolute -top-px left-0"></div>
+              </div>
+              <span id="geoStatus" class="text-xs text-white/60">Outside zone</span>
+            </label>
+          </div>
+          <div>
+            <button id="btnGeoCheck" class="px-3 py-2 rounded-xl bg-white/10">Check location</button>
+          </div>
+          <div id="geoTempWrap" class="hidden">
+            <div class="text-xs text-white/60 mb-1">Campus updates</div>
+            <div id="geoTempNotifs" class="space-y-2"></div>
+          </div>
+          <div class="flex gap-2">
+            <input id="geoPostInput" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" placeholder="Share a quick update" />
+            <button id="geoPostBtn" class="px-3 py-2 rounded-xl bg-white/10" disabled>Post</button>
+          </div>
+          <div id="geoFeed" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- ACADEMIC VIEW -->
+      <section id="viewAcademic" class="tab hidden">
+        <div class="glass rounded-3xl p-4 space-y-3">
+          <div class="flex gap-2">
+            <input id="kbQuery" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" placeholder="Search guides" />
+            <button id="kbSearch" class="px-3 py-2 rounded-xl bg-white/10">Search</button>
+          </div>
+          <div id="kbResults" class="space-y-2"></div>
+          <div class="pt-2">
+            <div class="text-xs text-white/60 mb-2">Want a mentor?</div>
+            <button id="bookMentor" class="px-3 py-2 rounded-xl bg-brand-500">Book a 15‑min slot</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CORE PULSE VIEW -->
+      <section id="viewCore" class="tab hidden">
+        <div class="glass rounded-3xl p-4 space-y-3">
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <div class="text-xs text-white/60">Stress</div>
+              <input id="sliderStress" type="range" min="1" max="5" value="3" class="w-full" />
+              <div id="valStress" class="text-center text-white/80">3</div>
+            </div>
+            <div>
+              <div class="text-xs text-white/60">Clarity</div>
+              <input id="sliderClarity" type="range" min="1" max="5" value="3" class="w-full" />
+              <div id="valClarity" class="text-center text-white/80">3</div>
+            </div>
+            <div>
+              <div class="text-xs text-white/60">Motivation</div>
+              <input id="sliderMotivation" type="range" min="1" max="5" value="3" class="w-full" />
+              <div id="valMotivation" class="text-center text-white/80">3</div>
+            </div>
+          </div>
+          <button id="savePulse" class="px-3 py-2 rounded-xl bg-brand-500">Save</button>
+          <div id="triage" class="hidden rounded-xl bg-red-500/10 border border-red-500/30 p-3">
+            <div class="font-semibold">We noticed high stress and low clarity</div>
+            <div class="text-sm text-white/80">Would you like quick resources or to talk to someone?</div>
+            <div class="mt-2"><button id="triageDismiss" class="px-3 py-1.5 rounded-lg bg-white/10">Dismiss</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NETWORK VIEW -->
+      <section id="viewNetwork" class="tab hidden">
+        <div id="networkList" class="space-y-2"></div>
+      </section>
+
+      <!-- BOARD VIEW -->
+      <section id="viewBoard" class="tab hidden">
+        <div class="glass rounded-3xl p-4 space-y-3">
+          <div class="flex gap-2">
+            <input id="boardInput" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" placeholder="Share an update" />
+            <button id="boardPost" class="px-3 py-2 rounded-xl bg-white/10">Post</button>
+          </div>
+          <div id="boardList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- JOBS & EVENTS VIEW -->
+      <section id="viewJobs" class="tab hidden">
+        <div class="space-y-3">
+          <div class="glass rounded-2xl p-3">
+            <div class="text-xs text-white/60 mb-1">Jobs</div>
+            <div id="jobsList" class="space-y-2"></div>
+          </div>
+          <div class="glass rounded-2xl p-3">
+            <div class="text-xs text-white/60 mb-1">Events</div>
+            <div id="eventsList" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STUDY GROUPS VIEW -->
+      <section id="viewStudy" class="tab hidden">
+        <div class="glass rounded-3xl p-4 space-y-3">
+          <div class="flex gap-2">
+            <input id="groupName" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" placeholder="New group name" />
+            <button id="groupCreate" class="px-3 py-2 rounded-xl bg-brand-500">Create</button>
+          </div>
+          <div id="groupList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- MARKETPLACE VIEW -->
+      <section id="viewMarket" class="tab hidden">
+        <div id="marketGrid" class="grid grid-cols-2 gap-3"></div>
+      </section>
+
+      <!-- HOUSING VIEW -->
+      <section id="viewHousing" class="tab hidden">
+        <div class="glass rounded-3xl p-4 space-y-3">
+          <div class="flex items-end gap-2">
+            <div class="flex-1">
+              <label class="text-xs text-white/60">Min</label>
+              <input id="rentMin" type="number" class="w-full mt-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" value="0" />
+            </div>
+            <div class="flex-1">
+              <label class="text-xs text-white/60">Max</label>
+              <input id="rentMax" type="number" class="w-full mt-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none" value="1500" />
+            </div>
+            <button id="rentApply" class="px-3 py-2 rounded-xl bg-white/10">Apply</button>
+          </div>
+          <div id="housingList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- GAMING VIEW -->
+      <section id="viewGaming" class="tab hidden">
+        <div class="glass rounded-2xl p-3 mb-3">
+          <div class="inline-flex bg-white/5 rounded-xl p-1">
+            <button id="tabGameRooms" class="px-3 py-1.5 rounded-lg bg-brand-500 text-white">Rooms</button>
+            <button id="tabQuickGames" class="px-3 py-1.5 rounded-lg">Quick Games</button>
+          </div>
+        </div>
+        <div id="gameRooms" class="space-y-2"></div>
+        <div id="quickGames" class="hidden grid grid-cols-2 gap-3"></div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav id="bottomNav" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md p-3">
+      <div class="glass rounded-2xl px-3 py-2 grid grid-cols-5 gap-2">
+        <button class="navbtn px-2 py-2 rounded-xl bg-white/10" data-nav="home">Home</button>
+        <button class="navbtn px-2 py-2 rounded-xl" data-nav="profile">Profile</button>
+        <button class="navbtn px-2 py-2 rounded-xl" data-nav="chat">Chat</button>
+        <button class="navbtn px-2 py-2 rounded-xl" data-nav="geo">Geo</button>
+        <button class="navbtn px-2 py-2 rounded-xl" data-nav="more">More</button>
+      </div>
+    </nav>
+
+    <!-- More Menu -->
+    <div id="moreMenu" class="hidden fixed inset-0 z-40 p-4">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative glass rounded-2xl p-4 max-w-md mx-auto mt-16 space-y-2">
+        <div class="font-semibold">More</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="notifs">Notifications</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="academic">Academic</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="core">CORE Pulse</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="network">Network</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="board">Board</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="jobs">Jobs/Events</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="study">Study</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="market">Marketplace</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="housing">Housing</button>
+          <button class="px-3 py-2 rounded-xl bg-white/10" data-nav="gaming">Gaming</button>
+        </div>
+        <div class="flex justify-end pt-1"><button id="closeMore" class="px-3 py-1.5 rounded-lg bg-white/10">Close</button></div>
+      </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="modal" class="hidden fixed inset-0 z-50 items-center justify-center">
+      <div class="absolute inset-0 bg-black/60"></div>
+      <div class="relative glass rounded-2xl p-4 w-[90%] max-w-sm">
+        <div class="font-semibold mb-2">Pick a time</div>
+        <div id="modalSlots" class="flex flex-wrap gap-2"></div>
+        <div class="flex justify-end gap-2 mt-3">
+          <button id="modalClose" class="px-3 py-1.5 rounded-lg bg-white/10">Cancel</button>
+          <button id="modalConfirm" class="px-3 py-1.5 rounded-lg bg-brand-500">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Modal (Marketplace) -->
+    <div id="contactModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+      <div class="absolute inset-0 bg-black/60"></div>
+      <div class="relative glass rounded-2xl p-4 w-[90%] max-w-sm">
+        <div class="font-semibold mb-2">Contact Seller</div>
+        <div class="text-sm text-white/70">We’ll share your interest with the seller. They may contact you via your profile email.</div>
+        <div class="flex justify-end mt-3"><button id="contactClose" class="px-3 py-1.5 rounded-lg bg-white/10">Close</button></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Animations (GSAP) and App JS -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="assets/js/app.js"></script>
+
+  <!-- Game Modals -->
+  <div id="tttModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative glass rounded-2xl p-4 w-[92%] max-w-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-semibold">Tic Tac Toe</div>
+        <button id="tttClose" class="px-3 py-1.5 rounded-lg bg-white/10">Close</button>
+      </div>
+      <div id="tttStatus" class="text-sm text-white/70 mb-2">You are X</div>
+      <div id="tttGrid" class="ttt-grid"></div>
+      <div class="flex justify-end mt-3"><button id="tttRestart" class="px-3 py-1.5 rounded-lg bg-brand-500">Restart</button></div>
+    </div>
+  </div>
+
+  <div id="wordleModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative glass rounded-2xl p-4 w-[92%] max-w-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-semibold">Wordle Mini</div>
+        <button id="wordleClose" class="px-3 py-1.5 rounded-lg bg-white/10">Close</button>
+      </div>
+      <div class="text-xs text-white/60 mb-2">Guess the 5‑letter word in 6 tries</div>
+      <div id="wordleBoard" class="grid grid-rows-6 gap-1 mb-2"></div>
+      <div class="flex gap-2">
+        <input id="wordleInput" maxlength="5" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none uppercase" placeholder="TYPE" />
+        <button id="wordleEnter" class="px-3 py-2 rounded-xl bg-brand-500">Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Geo connecting overlay -->
+  <div id="geoConnecting" class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative glass rounded-2xl p-4 w-[90%] max-w-sm text-center">
+      <div class="font-semibold mb-2">Connecting…</div>
+      <div id="geoDots" class="flex justify-center gap-1 text-2xl"><span>•</span><span>•</span><span>•</span></div>
+    </div>
+  </div>
+
+  <!-- Notification stack (toasts) -->
+  <div id="notifyStack" class="pointer-events-none fixed top-16 right-2 z-[70] flex flex-col gap-2 w-[calc(100%-1rem)] max-w-sm"></div>
+
+  <!-- Optional Firebase (fill SEL_FIREBASE to enable writes) -->
+  <script>window.SEL_FIREBASE = { enabled: false, config: null };</script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    if (window.SEL_FIREBASE?.enabled && window.SEL_FIREBASE?.config) {
+      try { firebase.initializeApp(window.SEL_FIREBASE.config); } catch(e) {}
+    }
+  </script>
+</body>
+</html>
